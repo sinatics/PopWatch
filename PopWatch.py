@@ -63,7 +63,7 @@ def run():
         global timeout
         funkos = [('Hot Topic','Anti-Venom Exclusive','http://www.hottopic.com/product/funko-marvel-pop-anti-venom-vinyl-bobble-head-hot-topic-exclusive/10398985.html'),
               ('Hot Topic','Carnage Exclusive','http://www.hottopic.com/product/funko-marvel-pop-carnage-vinyl-bobble-head-hot-topic-exclusive/10398983.html'),
-              ('BoxLunch','Anti-Venom GITD Exclusive','http://www.boxlunchgifts.com/product/funko-pop-marvel-anti-venom-vinyl-bobble-head/10519590.html')]
+              ('BoxLunch','Regina Purple Exclusive','http://www.boxlunchgifts.com/product/funko-pop-once-upon-a-time-regina-vinyl-figure---boxlunch-exclusive/10609530.html')]
 
         for i in range(len(funkos)):
             Site, Title, url = funkos[i][0], funkos[i][1], funkos[i][2]
