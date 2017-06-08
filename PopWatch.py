@@ -68,6 +68,16 @@ def barnesandnoble_stock(url):
         return False
 
 
+def gamestop_stock(url):
+    soup = url_to_html(url)
+    html_source = soup.find_all("div", {"class": "button qq"})
+    match = re.search(r'\bAdd to Cart\b',str(html_source))
+    if match: #Return True if in stock
+        return True
+    else: #Return False if out of stock
+        return False
+
+
 def CheckFunko(Site, Title, url):
     global timout
     print("Checking: "+Site+" "+Title+" "+url)
@@ -80,6 +90,8 @@ def CheckFunko(Site, Title, url):
         status = walmart_stock(url)
     elif Site == 'Barnes and Noble':
         status = barnesandnoble_stock(url)
+    elif Site == 'GameStop':
+        status = gamestop_stock(url)
     else:
         status = False
     if status == True:
