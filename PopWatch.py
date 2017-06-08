@@ -1,13 +1,12 @@
-import requests,re,time,os
-import ConfigParser
+import requests,json,re,time,sys
 from bs4 import BeautifulSoup
 from pushbullet import Pushbullet
 
-#Import API key from key.ini
-config = ConfigParser.ConfigParser()
-file = (os.path.join(os.getcwd(),'key.ini'))
-config.read(file)
-apiKey = config.get("data", "apiKey")
+#Import API key from key.json
+with open('key.json') as key_file:
+    key = json.load(key_file)
+
+apiKey = key['apiKey']
 
 timeout = [] #Define global timeout list, this list is used to blacklist pops once they've sent one notification so you don't get 100 notifications for an in stock pop.
 
@@ -16,7 +15,7 @@ def PushText(Title,Message):
     pb = Pushbullet(apiKey)
     push = pb.push_note(Title, Message)
 
-def PushLink(Title,Link):
+def PushLink(Title, Link):
     global apiKey
     pb = Pushbullet(apiKey)
     push = pb.push_link(Title, Link)
@@ -44,32 +43,50 @@ def BoxLunchStock(url):
     else: #Return false if Out of Stock
         return False
 
-def CheckFunko(Site,Title,url):
+def WalmartStock(url):
+    soup = urlTohtml(url)
+    html_source = soup.find_all("div", {"class": "prod-ProductPrimaryCTA"})
+    match = re.search(r'\bAdd to Cart\b',str(html_source))
+    if match: #Return True if in stock
+        return True
+    else: #Return False if out of stock
+        return False
+
+def CheckFunko(Site, Title, url):
     global timout
-    print(Site+" "+Title+" "+url)
+    print("Checking: "+Site+" "+Title+" "+url)
 
     if Site == 'Hot Topic':
         status = HotTopicStock(url)
     elif Site == 'BoxLunch':
         status = BoxLunchStock(url)
+    elif Site == 'Walmart':
+        status = WalmartStock(url)
     else:
         status = False
     if status == True:
         PushLink(Site+" - In Stock: "+Title,url)
-        timeout.append(Title)
 
-def run():
+        # Set timeout for found pops, this prevents any future pushbullet notifications from going out.
+        timeout.append(Title)
+        print("Timeout Set: "+Site+" "+Title)
+
+def pop_search(funkopop_links, sleep_interval=60):
     while True:
         global timeout
-        funkos = [('Hot Topic','Anti-Venom Exclusive','http://www.hottopic.com/product/funko-marvel-pop-anti-venom-vinyl-bobble-head-hot-topic-exclusive/10398985.html'),
-              ('Hot Topic','Carnage Exclusive','http://www.hottopic.com/product/funko-marvel-pop-carnage-vinyl-bobble-head-hot-topic-exclusive/10398983.html'),
-              ('BoxLunch','Regina Purple Exclusive','http://www.boxlunchgifts.com/product/funko-pop-once-upon-a-time-regina-vinyl-figure---boxlunch-exclusive/10609530.html')]
 
-        for i in range(len(funkos)):
-            Site, Title, url = funkos[i][0], funkos[i][1], funkos[i][2]
-            if Title not in timeout:
-                CheckFunko(Site, Title, url)
-        time.sleep(60) #Sleep for 1 minute then loop.
+        for i in funkopop_links:
+            if i['PopName'] not in timeout:
+                CheckFunko(i['Store'], i['PopName'], i['URL'])
+        time.sleep(sleep_interval) #Sleep for 1 minute (default unless defined) then loop.
 
 if __name__ == '__main__':
-    run()
+    # Load in items from pops.json
+    with open('pops.json') as data_file:
+        json_pops = json.load(data_file)
+
+    # Set sleep interval if defined as an argument and start pop_search, which runs once every "sleep_interval" on the links specified in pops.json
+    if len(sys.argv) > 1:
+        pop_search(json_pops, int(sys.argv[1]))
+    else:
+        pop_search(json_pops)
