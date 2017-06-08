@@ -1,6 +1,6 @@
 # PopWatch
 Track when Funko Pops are in stock online.
-Currently only Hot Topic, BoxLunch, and Walmart are implemented.
+Currently only Hot Topic, BoxLunch, Barnes & Noble, and Walmart are implemented.
 
 # Setup
 1. pip install requests beautifulsoup4 pushbullet.py

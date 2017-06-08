@@ -10,23 +10,27 @@ apiKey = key['apiKey']
 
 timeout = [] #Define global timeout list, this list is used to blacklist pops once they've sent one notification so you don't get 100 notifications for an in stock pop.
 
-def PushText(Title,Message):
+
+def push_text(Title, Message):
     global apiKey
     pb = Pushbullet(apiKey)
     push = pb.push_note(Title, Message)
 
-def PushLink(Title, Link):
+
+def push_link(Title, Link):
     global apiKey
     pb = Pushbullet(apiKey)
     push = pb.push_link(Title, Link)
 
-def urlTohtml(url):
+
+def url_to_html(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, 'html.parser')
     return soup
 
-def HotTopicStock(url):
-    soup = urlTohtml(url)
+
+def hottopic_stock(url):
+    soup = url_to_html(url)
     html_source = soup.find_all("div", {"class" : "availability-msg"})
     match = re.search(r'\bIn Stock\b',str(html_source))
     if match: #Return true if In Stock
@@ -34,8 +38,9 @@ def HotTopicStock(url):
     else: #Return false if Out of Stock
         return False
 
-def BoxLunchStock(url):
-    soup = urlTohtml(url)
+
+def boxlunch_stock(url):
+    soup = url_to_html(url)
     html_source = soup.find_all("div", {"class": "availability"})
     match = re.search(r'\bIn Stock\b', str(html_source))
     if match: #Return true if In Stock
@@ -43,8 +48,9 @@ def BoxLunchStock(url):
     else: #Return false if Out of Stock
         return False
 
-def WalmartStock(url):
-    soup = urlTohtml(url)
+
+def walmart_stock(url):
+    soup = url_to_html(url)
     html_source = soup.find_all("div", {"class": "prod-ProductPrimaryCTA"})
     match = re.search(r'\bAdd to Cart\b',str(html_source))
     if match: #Return True if in stock
@@ -52,24 +58,37 @@ def WalmartStock(url):
     else: #Return False if out of stock
         return False
 
+def barnesandnoble_stock(url):
+    soup = url_to_html(url)
+    html_source = soup.find_all("section", {"id": "skuSelection"})
+    match = re.search(r'\bAdd to Bag\b',str(html_source))
+    if match: #Return True if in stock
+        return True
+    else: #Return False if out of stock
+        return False
+
+
 def CheckFunko(Site, Title, url):
     global timout
     print("Checking: "+Site+" "+Title+" "+url)
 
     if Site == 'Hot Topic':
-        status = HotTopicStock(url)
+        status = hottopic_stock(url)
     elif Site == 'BoxLunch':
-        status = BoxLunchStock(url)
+        status = boxlunch_stock(url)
     elif Site == 'Walmart':
-        status = WalmartStock(url)
+        status = walmart_stock(url)
+    elif Site == 'Barnes and Noble':
+        status = barnesandnoble_stock(url)
     else:
         status = False
     if status == True:
-        PushLink(Site+" - In Stock: "+Title,url)
+        push_link(Site + " - In Stock: " + Title, url)
 
         # Set timeout for found pops, this prevents any future pushbullet notifications from going out.
         timeout.append(Title)
         print("Timeout Set: "+Site+" "+Title)
+
 
 def pop_search(funkopop_links, sleep_interval=60):
     while True:
@@ -79,6 +98,7 @@ def pop_search(funkopop_links, sleep_interval=60):
             if i['PopName'] not in timeout:
                 CheckFunko(i['Store'], i['PopName'], i['URL'])
         time.sleep(sleep_interval) #Sleep for 1 minute (default unless defined) then loop.
+
 
 if __name__ == '__main__':
     # Load in items from pops.json
