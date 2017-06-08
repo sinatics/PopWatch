@@ -2,7 +2,7 @@
 Track when Funko Pops are in stock online.
 Currently only Hot Topic, BoxLunch, and Walmart are implemented.
 
-#Setup
+# Setup
 1. pip install requests beautifulsoup4 pushbullet.py
 2. Edit key.json with your Pushbullet API Key.
 2. Edit pops.json and add your pops in json format.
